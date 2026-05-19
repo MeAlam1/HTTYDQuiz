@@ -1,39 +1,24 @@
 import {useEffect, useMemo, useState} from "react";
+import {DRAGON_DATA_B64} from "../data/dragonsData.js";
 
 export default function useDragons() {
     const [dragons, setDragons] = useState([]);
 
     useEffect(() => {
-        async function fetchDragons() {
-            const apiFiles = [
-                '/api/boulder.json',
-                '/api/mystery.json',
-                '/api/sharp.json',
-                '/api/stoker.json',
-                '/api/strike.json',
-                '/api/tidal.json',
-                '/api/tracker.json',
-                '/api/unknown.json',
-            ];
+        const decodeBase64 = (value) => {
+            if (typeof atob === "function") return atob(value);
+            return Buffer.from(value, "base64").toString("utf8");
+        };
 
-            const allDragons = await Promise.all(
-                apiFiles.map(async (file) => {
-                    const response = await fetch(file);
-                    return await response.json();
-                })
-            );
+        const decoded = JSON.parse(decodeBase64(DRAGON_DATA_B64));
+        const flattenedDragons = decoded.map((d) => ({
+            name: d.name,
+            image: d.img,
+            class: d.class,
+            film: d.origin,
+        }));
 
-            const flattenedDragons = allDragons.flat().map((d) => ({
-                name: d.name,
-                image: d.img,
-                class: d.class,
-                film: d.origin,
-            }));
-
-            setDragons(flattenedDragons);
-        }
-
-        fetchDragons();
+        setDragons(flattenedDragons);
     }, []);
 
     const classes = useMemo(() => {

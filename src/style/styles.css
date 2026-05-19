@@ -18,6 +18,17 @@ body {
     gap: 1rem;
 }
 
+.static-fallback {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.js-enabled .static-fallback {
+    display: none;
+}
+
 #root {
     width: 100%;
     display: flex;
@@ -505,6 +516,33 @@ body {
     gap: 0.5rem;
     color: #dbe6f5;
     font-size: 0.95rem;
+}
+
+.filter-summary {
+    background: rgba(33, 150, 243, 0.15);
+    color: #cfe8ff;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.filter-section {
+    text-align: left;
+    margin-bottom: 1rem;
+}
+
+.filter-header {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #cfe8ff;
+}
+
+.filter-grid {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 @media (max-width: 600px) {

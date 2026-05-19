@@ -8,4 +8,5 @@ import "./style/styles.css";
 * Add Cloudflare database for LeaderBoard
  */
 
+document.body.classList.add("js-enabled");
 createRoot(document.getElementById("root")).render(<App/>);

@@ -7,6 +7,7 @@ import TopBar from "./components/TopBar.jsx";
 import GameControls from "./components/GameControls.jsx";
 import ModeSelectModal from "./components/ModeSelectModal.jsx";
 import ConfirmResetModal from "./components/ConfirmResetModal.jsx";
+import FilterConfigModal from "./components/FilterConfigModal.jsx";
 
 function App() {
     const [filteredClass, setFilteredClass] = useState(null);
@@ -14,6 +15,7 @@ function App() {
     const [sortMode, setSortMode] = useState("class");
     const [gameMode, setGameMode] = useState("general");
     const [isModeModalOpen, setIsModeModalOpen] = useState(true);
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const {dragons, classes} = useDragons();
     const [loading, setLoading] = useState(true);
     const [resetPrompt, setResetPrompt] = useState(null);
@@ -21,7 +23,11 @@ function App() {
     const originList = useMemo(() => {
         return [...new Set(dragons.map((d) => d.film))].sort((a, b) => a.localeCompare(b));
     }, [dragons]);
+    const classList = useMemo(() => {
+        return [...new Set(dragons.map((d) => d.class))].sort((a, b) => a.localeCompare(b));
+    }, [dragons]);
     const [originFilters, setOriginFilters] = useState({});
+    const [classFilters, setClassFilters] = useState({});
 
     useEffect(() => {
         if (originList.length === 0) return;
@@ -33,6 +39,17 @@ function App() {
             return next;
         });
     }, [originList]);
+
+    useEffect(() => {
+        if (classList.length === 0) return;
+        setClassFilters((prev) => {
+            const next = {...prev};
+            classList.forEach((className) => {
+                if (next[className] === undefined) next[className] = true;
+            });
+            return next;
+        });
+    }, [classList]);
 
     const originCounts = useMemo(() => {
         const counts = {};
@@ -48,9 +65,27 @@ function App() {
         return counts;
     }, [dragons, originList, gameMode, filteredClass, selectedOrigin]);
 
+    const classCounts = useMemo(() => {
+        const counts = {};
+        classList.forEach((className) => {
+            counts[className] = 0;
+        });
+        dragons.forEach((dragon) => {
+            if (gameMode === "origin" && selectedOrigin && dragon.film !== selectedOrigin) return;
+            if (gameMode === "class" && filteredClass && dragon.class !== filteredClass) return;
+            if (!counts[dragon.class]) counts[dragon.class] = 0;
+            counts[dragon.class] += 1;
+        });
+        return counts;
+    }, [dragons, classList, gameMode, filteredClass, selectedOrigin]);
+
     const availableOrigins = useMemo(() => {
         return originList.filter((origin) => (originCounts[origin] || 0) > 0);
     }, [originCounts, originList]);
+
+    const availableClasses = useMemo(() => {
+        return classList.filter((className) => (classCounts[className] || 0) > 0);
+    }, [classCounts, classList]);
 
     useEffect(() => {
         if (availableOrigins.length === 0) return;
@@ -65,9 +100,24 @@ function App() {
         });
     }, [availableOrigins]);
 
+    useEffect(() => {
+        if (availableClasses.length === 0) return;
+        setClassFilters((prev) => {
+            const next = {...prev};
+            availableClasses.forEach((className) => {
+                if (next[className] === undefined) next[className] = true;
+            });
+            const hasActive = availableClasses.some((className) => next[className] !== false);
+            if (!hasActive) next[availableClasses[0]] = true;
+            return next;
+        });
+    }, [availableClasses]);
+
     const isDragonActive = (dragon) => {
         const originEnabled = originFilters[dragon.film] !== false;
-        const classEnabled = !filteredClass || dragon.class === filteredClass;
+        const classEnabled = filteredClass
+            ? dragon.class === filteredClass
+            : classFilters[dragon.class] !== false;
         return originEnabled && classEnabled;
     };
 
@@ -207,19 +257,24 @@ function App() {
         );
     };
 
-    const handleOriginToggle = (origin) => {
+    const handleApplyFilters = (nextOrigins, nextClasses) => {
         requestControlChange(() => {
-            setOriginFilters((prev) => {
-                const next = {...prev};
-                next[origin] = !(prev[origin] !== false);
-                const activeCount = availableOrigins.filter((item) => next[item] !== false).length;
-                if (activeCount === 0) return prev;
-                return next;
-            });
+            const normalizedOrigins = {...nextOrigins};
+            if (availableOrigins.length > 0 && !availableOrigins.some((o) => normalizedOrigins[o] !== false)) {
+                normalizedOrigins[availableOrigins[0]] = true;
+            }
+            const normalizedClasses = {...nextClasses};
+            if (availableClasses.length > 0 && !availableClasses.some((c) => normalizedClasses[c] !== false)) {
+                normalizedClasses[availableClasses[0]] = true;
+            }
+            setOriginFilters(normalizedOrigins);
+            setClassFilters(normalizedClasses);
+            setIsFilterModalOpen(false);
         });
     };
 
     const activeOriginCount = availableOrigins.filter((origin) => originFilters[origin] !== false).length;
+    const activeClassCount = availableClasses.filter((className) => classFilters[className] !== false).length;
 
     return (
         <>
@@ -261,10 +316,11 @@ function App() {
                     elapsed={elapsed}
                     gameMode={gameMode}
                     onOpenModeSelect={() => setIsModeModalOpen(true)}
+                    onOpenFilters={() => setIsFilterModalOpen(true)}
                     availableOrigins={availableOrigins}
+                    availableClasses={availableClasses}
                     activeOriginCount={activeOriginCount}
-                    originFilters={originFilters}
-                    onOriginToggle={handleOriginToggle}
+                    activeClassCount={activeClassCount}
                 />
             </div>
 
@@ -283,6 +339,16 @@ function App() {
                 message={resetPrompt?.message}
                 onConfirm={handleConfirmReset}
                 onCancel={handleCancelReset}
+            />
+
+            <FilterConfigModal
+                isOpen={isFilterModalOpen}
+                availableOrigins={availableOrigins}
+                availableClasses={availableClasses}
+                originFilters={originFilters}
+                classFilters={classFilters}
+                onApply={handleApplyFilters}
+                onCancel={() => setIsFilterModalOpen(false)}
             />
         </>
     );

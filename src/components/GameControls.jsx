@@ -13,10 +13,11 @@ function GameControls({
                           elapsed,
                           gameMode,
                           onOpenModeSelect,
+                          onOpenFilters,
                           availableOrigins,
+                          availableClasses,
                           activeOriginCount,
-                          originFilters,
-                          onOriginToggle
+                          activeClassCount
                       }) {
     const [isPaused, setIsPaused] = useState(false);
     const [draftTimeLimit, setDraftTimeLimit] = useState(timeLimit);
@@ -53,6 +54,13 @@ function GameControls({
     };
 
     const modeLabel = gameMode === "class" ? "Class" : gameMode === "origin" ? "Origin" : "General";
+
+    const originSummary = availableOrigins.length > 0
+        ? `${activeOriginCount}/${availableOrigins.length}`
+        : "0/0";
+    const classSummary = availableClasses.length > 0
+        ? `${activeClassCount}/${availableClasses.length}`
+        : "0/0";
 
     return (
         <>
@@ -114,31 +122,13 @@ function GameControls({
                         Change
                     </button>
                 </div>
-            </div>
-            <div className="game-controls origins-row">
-                <div className="timer-area origins-area">
-                    <label>Origins:</label>
-                    {availableOrigins.length === 0 ? (
-                        <span className="origin-empty">Loading...</span>
-                    ) : (
-                        <details className="origin-config">
-                            <summary className="origin-config-summary">
-                                Filters ({activeOriginCount}/{availableOrigins.length})
-                            </summary>
-                            <div className="origin-config-panel">
-                                {availableOrigins.map((origin) => (
-                                    <label key={origin} className="origin-option">
-                                        <input
-                                            type="checkbox"
-                                            checked={originFilters[origin] !== false}
-                                            onChange={() => onOriginToggle(origin)}
-                                        />
-                                        <span>{origin}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </details>
-                    )}
+                <div className="timer-area">
+                    <label>Filters:</label>
+                    <span className="filter-summary">Origins {originSummary}</span>
+                    <span className="filter-summary">Classes {classSummary}</span>
+                    <button onClick={onOpenFilters} className="control-button">
+                        Configure
+                    </button>
                 </div>
             </div>
             {isPaused && <PauseMenu onResume={handleResume}/>}
