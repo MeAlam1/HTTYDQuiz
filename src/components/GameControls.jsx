@@ -3,38 +3,19 @@ import PauseMenu from "./PauseMenu.jsx";
 
 function GameControls({
                           timerMode,
-                          onTimerModeChange,
                           timeLimit,
-                          onTimeLimitApply,
                           setStartTime,
                           timerStarted,
                           sortMode,
-                          onSortModeChange,
                           elapsed,
                           gameMode,
-                          onOpenModeSelect,
-                          onOpenFilters,
-                          availableOrigins,
-                          availableClasses,
+                          onOpenConfig,
                           activeOriginCount,
-                          activeClassCount
+                          totalOrigins,
+                          activeClassCount,
+                          totalClasses
                       }) {
     const [isPaused, setIsPaused] = useState(false);
-    const [draftTimeLimit, setDraftTimeLimit] = useState(timeLimit);
-
-    useEffect(() => {
-        setDraftTimeLimit(timeLimit);
-    }, [timeLimit]);
-
-    const handleSetTime = () => {
-        if (draftTimeLimit > 0) {
-            onTimeLimitApply(draftTimeLimit);
-        }
-    };
-
-    const handleInfinite = () => {
-        onTimerModeChange("up");
-    };
 
     const handlePause = () => {
         setStartTime(null);
@@ -54,80 +35,39 @@ function GameControls({
     };
 
     const modeLabel = gameMode === "class" ? "Class" : gameMode === "origin" ? "Origin" : "General";
-
-    const originSummary = availableOrigins.length > 0
-        ? `${activeOriginCount}/${availableOrigins.length}`
-        : "0/0";
-    const classSummary = availableClasses.length > 0
-        ? `${activeClassCount}/${availableClasses.length}`
-        : "0/0";
+    const sortLabel = sortMode === "class" ? "By Class" : "By Origin";
+    const timerLabel = timerMode === "up" ? "Infinite" : `${timeLimit} Min`;
 
     return (
         <>
-            <div className="game-controls">
-                <div className="timer-area">
-                    <label>Sort:</label>
-                    <button
-                        onClick={() => onSortModeChange("class")}
-                        className={`control-button ${sortMode === "class" ? "active" : ""}`}
-                    >
-                        Class
-                    </button>
-                    <button
-                        onClick={() => onSortModeChange("film")}
-                        className={`control-button ${sortMode === "film" ? "active" : ""}`}
-                    >
-                        Origin
-                    </button>
-                </div>
-                <div className="timer-area">
-                    <label>Timer:</label>
-                    <div className="timer-buttons">
-                        <button
-                            onClick={handleInfinite}
-                            className={`control-button ${timerMode === "up" ? "active" : ""}`}
-                        >
-                            ∞
-                        </button>
-                        <div className="time-input">
-                            <input
-                                type="text"
-                                value={draftTimeLimit}
-                                onInput={(e) => {
-                                    const numericValue = e.currentTarget.value.replace(/[^0-9]/g, "");
-                                    setDraftTimeLimit(Number(numericValue || 0));
-                                }}
-                                title="Minutes"
-                            />
-                            <span>Min</span>
-                        </div>
-                        <button
-                            onClick={handleSetTime}
-                            className={`control-button ${timerMode === "down" ? "countdown-button" : ""}`}
-                        >
-                            Set
-                        </button>
+            <div className="game-controls-container">
+                <div className="game-controls-summary">
+                    <div className="summary-item">
+                        <span className="summary-label">Mode:</span>
+                        <span className="summary-value">{modeLabel}</span>
                     </div>
+                    <div className="summary-item">
+                        <span className="summary-label">Sort:</span>
+                        <span className="summary-value">{sortLabel}</span>
+                    </div>
+                    <div className="summary-item">
+                        <span className="summary-label">Timer:</span>
+                        <span className="summary-value">{timerLabel}</span>
+                    </div>
+                    <div className="summary-item">
+                        <span className="summary-label">Filters:</span>
+                        <span className="summary-value">
+                            Origins {activeOriginCount}/{totalOrigins}, 
+                            Classes {activeClassCount}/{totalClasses}
+                        </span>
+                    </div>
+                </div>
+                <div className="game-controls-actions">
+                    <button onClick={onOpenConfig} className="control-button config-trigger">
+                        Configure
+                    </button>
                     <button onClick={handlePause} className="control-button pause-button">
                         II
-                    </button>
-                </div>
-                <div className="timer-area">
-                    <label>Mode:</label>
-                    <span className="mode-pill">{modeLabel}</span>
-                    <button
-                        onClick={onOpenModeSelect}
-                        className="control-button"
-                    >
-                        Change
-                    </button>
-                </div>
-                <div className="timer-area">
-                    <label>Filters:</label>
-                    <span className="filter-summary">Origins {originSummary}</span>
-                    <span className="filter-summary">Classes {classSummary}</span>
-                    <button onClick={onOpenFilters} className="control-button">
-                        Configure
                     </button>
                 </div>
             </div>

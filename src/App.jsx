@@ -5,17 +5,15 @@ import DragonGrid from "./components/DragonGrid.jsx";
 import Timer from "./components/Timer.jsx";
 import TopBar from "./components/TopBar.jsx";
 import GameControls from "./components/GameControls.jsx";
-import ModeSelectModal from "./components/ModeSelectModal.jsx";
+import ConfigModal from "./components/ConfigModal.jsx";
 import ConfirmResetModal from "./components/ConfirmResetModal.jsx";
-import FilterConfigModal from "./components/FilterConfigModal.jsx";
 
 function App() {
     const [filteredClass, setFilteredClass] = useState(null);
     const [selectedOrigin, setSelectedOrigin] = useState(null);
     const [sortMode, setSortMode] = useState("class");
     const [gameMode, setGameMode] = useState("general");
-    const [isModeModalOpen, setIsModeModalOpen] = useState(true);
-    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
     const {dragons, classes} = useDragons();
     const [loading, setLoading] = useState(true);
     const [resetPrompt, setResetPrompt] = useState(null);
@@ -194,83 +192,22 @@ function App() {
         setResetPrompt(null);
     };
 
-    const applyGeneralMode = () => {
-        requestControlChange(() => {
-            setGameMode("general");
-            setFilteredClass(null);
-            setSelectedOrigin(null);
-            setSortMode("class");
-            setIsModeModalOpen(false);
+    const handleApplyConfig = (config) => {
+        setSortMode(config.sortMode);
+        setTimerMode(config.timerMode);
+        setTimeLimit(config.timeLimit);
+        setGameMode(config.gameMode);
+        setFilteredClass(config.filteredClass);
+        setSelectedOrigin(config.selectedOrigin);
+        setOriginFilters(config.originFilters);
+        setClassFilters(config.classFilters);
+
+        // Always reset if we're applying from config (ConfigModal handles the confirm reset prompt)
+        handleReset({
+            timerMode: config.timerMode,
+            timeLimit: config.timeLimit
         });
-    };
-
-    const applyClassMode = (className) => {
-        requestControlChange(() => {
-            setGameMode("class");
-            setFilteredClass(className);
-            setSelectedOrigin(null);
-            setSortMode("class");
-            setIsModeModalOpen(false);
-        });
-    };
-
-    const applyOriginMode = (origin) => {
-        requestControlChange(() => {
-            setGameMode("origin");
-            setFilteredClass(null);
-            setSelectedOrigin(origin);
-            setSortMode("film");
-            setOriginFilters(originList.reduce((acc, key) => {
-                acc[key] = key === origin;
-                return acc;
-            }, {}));
-            setIsModeModalOpen(false);
-        });
-    };
-
-    const handleModeModalClose = () => {
-        setIsModeModalOpen(false);
-    };
-
-    const handleSortModeChange = (mode) => {
-        requestControlChange(() => {
-            setSortMode(mode);
-        });
-    };
-
-    const handleTimerModeChange = (mode) => {
-        requestControlChange(
-            () => {
-                setTimerMode(mode);
-            },
-            {timerMode: mode, timeLimit}
-        );
-    };
-
-    const handleTimeLimitApply = (nextLimit) => {
-        requestControlChange(
-            () => {
-                setTimeLimit(nextLimit);
-                setTimerMode("down");
-            },
-            {timerMode: "down", timeLimit: nextLimit}
-        );
-    };
-
-    const handleApplyFilters = (nextOrigins, nextClasses) => {
-        requestControlChange(() => {
-            const normalizedOrigins = {...nextOrigins};
-            if (availableOrigins.length > 0 && !availableOrigins.some((o) => normalizedOrigins[o] !== false)) {
-                normalizedOrigins[availableOrigins[0]] = true;
-            }
-            const normalizedClasses = {...nextClasses};
-            if (availableClasses.length > 0 && !availableClasses.some((c) => normalizedClasses[c] !== false)) {
-                normalizedClasses[availableClasses[0]] = true;
-            }
-            setOriginFilters(normalizedOrigins);
-            setClassFilters(normalizedClasses);
-            setIsFilterModalOpen(false);
-        });
+        setIsConfigModalOpen(false);
     };
 
     const activeOriginCount = availableOrigins.filter((origin) => originFilters[origin] !== false).length;
@@ -306,32 +243,37 @@ function App() {
                 <hr/>
                 <GameControls
                     timerMode={timerMode}
-                    onTimerModeChange={handleTimerModeChange}
                     timeLimit={timeLimit}
-                    onTimeLimitApply={handleTimeLimitApply}
                     setStartTime={setStartTime}
                     timerStarted={timerStarted}
                     sortMode={sortMode}
-                    onSortModeChange={handleSortModeChange}
                     elapsed={elapsed}
                     gameMode={gameMode}
-                    onOpenModeSelect={() => setIsModeModalOpen(true)}
-                    onOpenFilters={() => setIsFilterModalOpen(true)}
-                    availableOrigins={availableOrigins}
-                    availableClasses={availableClasses}
+                    onOpenConfig={() => setIsConfigModalOpen(true)}
                     activeOriginCount={activeOriginCount}
+                    totalOrigins={availableOrigins.length}
                     activeClassCount={activeClassCount}
+                    totalClasses={availableClasses.length}
                 />
             </div>
 
-            <ModeSelectModal
-                isOpen={isModeModalOpen}
-                classes={classes}
-                origins={availableOrigins}
-                onSelectGeneral={applyGeneralMode}
-                onSelectOrigin={applyOriginMode}
-                onSelectClass={applyClassMode}
-                onClose={handleModeModalClose}
+            <ConfigModal
+                isOpen={isConfigModalOpen}
+                onClose={() => setIsConfigModalOpen(false)}
+                onApply={handleApplyConfig}
+                hasStarted={hasStarted}
+                currentSortMode={sortMode}
+                currentTimerMode={timerMode}
+                currentTimeLimit={timeLimit}
+                currentGameMode={gameMode}
+                currentFilteredClass={filteredClass}
+                currentSelectedOrigin={selectedOrigin}
+                currentOriginFilters={originFilters}
+                currentClassFilters={classFilters}
+                allOrigins={originList}
+                allClasses={classList}
+                availableOrigins={availableOrigins}
+                availableClasses={availableClasses}
             />
 
             <ConfirmResetModal
@@ -339,16 +281,6 @@ function App() {
                 message={resetPrompt?.message}
                 onConfirm={handleConfirmReset}
                 onCancel={handleCancelReset}
-            />
-
-            <FilterConfigModal
-                isOpen={isFilterModalOpen}
-                availableOrigins={availableOrigins}
-                availableClasses={availableClasses}
-                originFilters={originFilters}
-                classFilters={classFilters}
-                onApply={handleApplyFilters}
-                onCancel={() => setIsFilterModalOpen(false)}
             />
         </>
     );
