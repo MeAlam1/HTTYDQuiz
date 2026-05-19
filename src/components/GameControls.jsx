@@ -1,39 +1,38 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import PauseMenu from "./PauseMenu.jsx";
 
 function GameControls({
                           timerMode,
-                          setTimerMode,
+                          onTimerModeChange,
                           timeLimit,
-                          setTimeLimit,
+                          onTimeLimitApply,
                           setStartTime,
-                          setElapsed,
                           timerStarted,
                           sortMode,
-                          setSortMode,
-                          handleReset,
+                          onSortModeChange,
                           elapsed,
                           gameMode,
                           onOpenModeSelect,
-                          originList,
+                          availableOrigins,
+                          activeOriginCount,
                           originFilters,
-                          setOriginFilters
+                          onOriginToggle
                       }) {
     const [isPaused, setIsPaused] = useState(false);
+    const [draftTimeLimit, setDraftTimeLimit] = useState(timeLimit);
+
+    useEffect(() => {
+        setDraftTimeLimit(timeLimit);
+    }, [timeLimit]);
 
     const handleSetTime = () => {
-        if (timeLimit > 0) {
-            handleReset();
-            setTimerMode("down");
-            const timeInSeconds = timeLimit * 60;
-            setElapsed(timeInSeconds);
+        if (draftTimeLimit > 0) {
+            onTimeLimitApply(draftTimeLimit);
         }
     };
 
     const handleInfinite = () => {
-        handleReset();
-        setTimerMode("up");
-        setElapsed(0);
+        onTimerModeChange("up");
     };
 
     const handlePause = () => {
@@ -53,7 +52,7 @@ function GameControls({
         setIsPaused(false);
     };
 
-    const modeLabel = gameMode === "class" ? "Class" : gameMode === "movie" ? "Movie" : "General";
+    const modeLabel = gameMode === "class" ? "Class" : gameMode === "origin" ? "Origin" : "General";
 
     return (
         <>
@@ -61,19 +60,13 @@ function GameControls({
                 <div className="timer-area">
                     <label>Sort:</label>
                     <button
-                        onClick={() => {
-                            setSortMode("class");
-                            handleReset();
-                        }}
+                        onClick={() => onSortModeChange("class")}
                         className={`control-button ${sortMode === "class" ? "active" : ""}`}
                     >
                         Class
                     </button>
                     <button
-                        onClick={() => {
-                            setSortMode("film");
-                            handleReset();
-                        }}
+                        onClick={() => onSortModeChange("film")}
                         className={`control-button ${sortMode === "film" ? "active" : ""}`}
                     >
                         Origin
@@ -91,10 +84,10 @@ function GameControls({
                         <div className="time-input">
                             <input
                                 type="text"
-                                value={timeLimit}
+                                value={draftTimeLimit}
                                 onInput={(e) => {
                                     const numericValue = e.currentTarget.value.replace(/[^0-9]/g, "");
-                                    setTimeLimit(Number(numericValue || 0));
+                                    setDraftTimeLimit(Number(numericValue || 0));
                                 }}
                                 title="Minutes"
                             />
@@ -125,23 +118,26 @@ function GameControls({
             <div className="game-controls origins-row">
                 <div className="timer-area origins-area">
                     <label>Origins:</label>
-                    {originList.length === 0 ? (
+                    {availableOrigins.length === 0 ? (
                         <span className="origin-empty">Loading...</span>
                     ) : (
-                        originList.map((origin) => (
-                            <button
-                                key={origin}
-                                className={`control-button ${originFilters[origin] !== false ? "active" : ""}`}
-                                onClick={() =>
-                                    setOriginFilters((prev) => ({
-                                        ...prev,
-                                        [origin]: !(prev[origin] !== false)
-                                    }))
-                                }
-                            >
-                                {origin} {originFilters[origin] !== false ? "✓" : "✗"}
-                            </button>
-                        ))
+                        <details className="origin-config">
+                            <summary className="origin-config-summary">
+                                Filters ({activeOriginCount}/{availableOrigins.length})
+                            </summary>
+                            <div className="origin-config-panel">
+                                {availableOrigins.map((origin) => (
+                                    <label key={origin} className="origin-option">
+                                        <input
+                                            type="checkbox"
+                                            checked={originFilters[origin] !== false}
+                                            onChange={() => onOriginToggle(origin)}
+                                        />
+                                        <span>{origin}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </details>
                     )}
                 </div>
             </div>

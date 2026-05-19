@@ -6,14 +6,17 @@ import Timer from "./components/Timer.jsx";
 import TopBar from "./components/TopBar.jsx";
 import GameControls from "./components/GameControls.jsx";
 import ModeSelectModal from "./components/ModeSelectModal.jsx";
+import ConfirmResetModal from "./components/ConfirmResetModal.jsx";
 
 function App() {
     const [filteredClass, setFilteredClass] = useState(null);
+    const [selectedOrigin, setSelectedOrigin] = useState(null);
     const [sortMode, setSortMode] = useState("class");
     const [gameMode, setGameMode] = useState("general");
     const [isModeModalOpen, setIsModeModalOpen] = useState(true);
     const {dragons, classes} = useDragons();
     const [loading, setLoading] = useState(true);
+    const [resetPrompt, setResetPrompt] = useState(null);
 
     const originList = useMemo(() => {
         return [...new Set(dragons.map((d) => d.film))].sort((a, b) => a.localeCompare(b));
@@ -31,6 +34,37 @@ function App() {
         });
     }, [originList]);
 
+    const originCounts = useMemo(() => {
+        const counts = {};
+        originList.forEach((origin) => {
+            counts[origin] = 0;
+        });
+        dragons.forEach((dragon) => {
+            if (gameMode === "class" && filteredClass && dragon.class !== filteredClass) return;
+            if (gameMode === "origin" && selectedOrigin && dragon.film !== selectedOrigin) return;
+            if (!counts[dragon.film]) counts[dragon.film] = 0;
+            counts[dragon.film] += 1;
+        });
+        return counts;
+    }, [dragons, originList, gameMode, filteredClass, selectedOrigin]);
+
+    const availableOrigins = useMemo(() => {
+        return originList.filter((origin) => (originCounts[origin] || 0) > 0);
+    }, [originCounts, originList]);
+
+    useEffect(() => {
+        if (availableOrigins.length === 0) return;
+        setOriginFilters((prev) => {
+            const next = {...prev};
+            availableOrigins.forEach((origin) => {
+                if (next[origin] === undefined) next[origin] = true;
+            });
+            const hasActive = availableOrigins.some((origin) => next[origin] !== false);
+            if (!hasActive) next[availableOrigins[0]] = true;
+            return next;
+        });
+    }, [availableOrigins]);
+
     const isDragonActive = (dragon) => {
         const originEnabled = originFilters[dragon.film] !== false;
         const classEnabled = !filteredClass || dragon.class === filteredClass;
@@ -46,7 +80,7 @@ function App() {
         timeLimit, setTimeLimit, timerStarted,
         guess,
         revealed, setRevealed,
-        elapsed, setElapsed, setStartTime, handleGuessChange, handleReset, handleQuit,
+        elapsed, setStartTime, handleGuessChange, handleReset, handleQuit,
         hasStarted, allRevealed, timerRanOut, sortedIndices
     } = useGameState(dragons, filteredClass, activeIndices, sortMode);
 
@@ -87,47 +121,115 @@ function App() {
         };
     }, [activeIndices, revealed, setRevealed]);
 
+    const requestControlChange = (action, resetOptions, message) => {
+        if (!hasStarted) {
+            action();
+            return;
+        }
+        setResetPrompt({
+            action,
+            resetOptions,
+            message: message || "Changing this setting will reset your current run. Continue?"
+        });
+    };
+
+    const handleConfirmReset = () => {
+        if (!resetPrompt) return;
+        resetPrompt.action();
+        handleReset(resetPrompt.resetOptions);
+        setResetPrompt(null);
+    };
+
+    const handleCancelReset = () => {
+        setResetPrompt(null);
+    };
+
     const applyGeneralMode = () => {
-        setGameMode("general");
-        setFilteredClass(null);
-        setSortMode("class");
-        handleReset();
-        setIsModeModalOpen(false);
+        requestControlChange(() => {
+            setGameMode("general");
+            setFilteredClass(null);
+            setSelectedOrigin(null);
+            setSortMode("class");
+            setIsModeModalOpen(false);
+        });
     };
 
     const applyClassMode = (className) => {
-        setGameMode("class");
-        setFilteredClass(className);
-        setSortMode("class");
-        handleReset();
-        setIsModeModalOpen(false);
+        requestControlChange(() => {
+            setGameMode("class");
+            setFilteredClass(className);
+            setSelectedOrigin(null);
+            setSortMode("class");
+            setIsModeModalOpen(false);
+        });
     };
 
-    const applyMovieMode = () => {
-        setGameMode("movie");
-        setFilteredClass(null);
-        setSortMode("film");
-        handleReset();
-        setIsModeModalOpen(false);
+    const applyOriginMode = (origin) => {
+        requestControlChange(() => {
+            setGameMode("origin");
+            setFilteredClass(null);
+            setSelectedOrigin(origin);
+            setSortMode("film");
+            setOriginFilters(originList.reduce((acc, key) => {
+                acc[key] = key === origin;
+                return acc;
+            }, {}));
+            setIsModeModalOpen(false);
+        });
     };
 
     const handleModeModalClose = () => {
         setIsModeModalOpen(false);
     };
 
+    const handleSortModeChange = (mode) => {
+        requestControlChange(() => {
+            setSortMode(mode);
+        });
+    };
+
+    const handleTimerModeChange = (mode) => {
+        requestControlChange(
+            () => {
+                setTimerMode(mode);
+            },
+            {timerMode: mode, timeLimit}
+        );
+    };
+
+    const handleTimeLimitApply = (nextLimit) => {
+        requestControlChange(
+            () => {
+                setTimeLimit(nextLimit);
+                setTimerMode("down");
+            },
+            {timerMode: "down", timeLimit: nextLimit}
+        );
+    };
+
+    const handleOriginToggle = (origin) => {
+        requestControlChange(() => {
+            setOriginFilters((prev) => {
+                const next = {...prev};
+                next[origin] = !(prev[origin] !== false);
+                const activeCount = availableOrigins.filter((item) => next[item] !== false).length;
+                if (activeCount === 0) return prev;
+                return next;
+            });
+        });
+    };
+
+    const activeOriginCount = availableOrigins.filter((origin) => originFilters[origin] !== false).length;
+
     return (
-        <div className="app">
-            <header className="app-header">
-                <h1>Dragon Guessing Quiz</h1>
-                <p>Prove your dragon knowledge across classes, origins, and movies.</p>
-            </header>
+        <>
             <TopBar
                 guess={guess}
                 onGuessChange={handleGuessChange}
                 revealedCount={revealedCount}
                 total={uniqueFilteredDragons.length}
                 timer={<Timer elapsed={elapsed}/>}
-                onReset={handleReset}
+                onReset={() => handleReset()}
                 onQuit={handleQuit}
             />
 
@@ -149,42 +251,40 @@ function App() {
                 <hr/>
                 <GameControls
                     timerMode={timerMode}
-                    setTimerMode={(mode) => {
-                        setTimerMode(mode);
-                        handleReset();
-                    }}
+                    onTimerModeChange={handleTimerModeChange}
                     timeLimit={timeLimit}
-                    setTimeLimit={(val) => {
-                        setTimeLimit(val);
-                        if (timerMode === "down") setElapsed(val);
-                    }}
+                    onTimeLimitApply={handleTimeLimitApply}
                     setStartTime={setStartTime}
-                    sortMode={sortMode}
-                    setSortMode={(mode) => {
-                        setSortMode(mode);
-                        handleReset();
-                    }}
-                    setElapsed={setElapsed}
                     timerStarted={timerStarted}
-                    handleReset={handleReset}
+                    sortMode={sortMode}
+                    onSortModeChange={handleSortModeChange}
                     elapsed={elapsed}
                     gameMode={gameMode}
                     onOpenModeSelect={() => setIsModeModalOpen(true)}
-                    originList={originList}
+                    availableOrigins={availableOrigins}
+                    activeOriginCount={activeOriginCount}
                     originFilters={originFilters}
-                    setOriginFilters={setOriginFilters}
+                    onOriginToggle={handleOriginToggle}
                 />
             </div>
 
             <ModeSelectModal
                 isOpen={isModeModalOpen}
                 classes={classes}
+                origins={availableOrigins}
                 onSelectGeneral={applyGeneralMode}
-                onSelectMovie={applyMovieMode}
+                onSelectOrigin={applyOriginMode}
                 onSelectClass={applyClassMode}
                 onClose={handleModeModalClose}
             />
-        </div>
+
+            <ConfirmResetModal
+                isOpen={Boolean(resetPrompt)}
+                message={resetPrompt?.message}
+                onConfirm={handleConfirmReset}
+                onCancel={handleCancelReset}
+            />
+        </>
     );
 }
 

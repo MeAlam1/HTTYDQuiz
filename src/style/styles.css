@@ -18,6 +18,14 @@ body {
     gap: 1rem;
 }
 
+#root {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
 .app-header {
     text-align: center;
     padding: 1rem 1.5rem;
@@ -458,6 +466,45 @@ body {
 .origin-empty {
     color: #9fb1c7;
     font-style: italic;
+}
+
+.origin-config {
+    position: relative;
+}
+
+.origin-config-summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.45rem 0.75rem;
+    border-radius: 8px;
+    background: #1b222e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cfe8ff;
+    font-weight: 600;
+}
+
+.origin-config-summary::-webkit-details-marker {
+    display: none;
+}
+
+.origin-config-panel {
+    margin-top: 0.75rem;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    padding: 0.75rem;
+    border-radius: 12px;
+    background: #141a24;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.origin-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #dbe6f5;
+    font-size: 0.95rem;
 }
 
 @media (max-width: 600px) {

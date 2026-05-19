@@ -58,10 +58,12 @@ export default function useGameState(dragons, filteredClass, activeIndices, sort
         return () => clearInterval(interval);
     }, [startTime, timerMode, timeLimit]);
 
-    const handleReset = () => {
+    const handleReset = (options = {}) => {
+        const nextTimerMode = options.timerMode ?? timerMode;
+        const nextTimeLimit = options.timeLimit ?? timeLimit;
         setRevealed(Array(dragons.length).fill(false));
         setStartTime(null);
-        setElapsed(timerMode === "down" ? timeLimit * 60 : 0);
+        setElapsed(nextTimerMode === "down" ? nextTimeLimit * 60 : 0);
         setGuess("");
         setHasStarted(false);
         timerStarted.current = false;

@@ -1,10 +1,14 @@
 import {useEffect, useState} from "react";
 
-function ModeSelectModal({isOpen, classes, onSelectGeneral, onSelectMovie, onSelectClass, onClose}) {
+function ModeSelectModal({isOpen, classes, origins, onSelectGeneral, onSelectOrigin, onSelectClass, onClose}) {
     const [showClassList, setShowClassList] = useState(false);
+    const [showOriginList, setShowOriginList] = useState(false);
 
     useEffect(() => {
-        if (isOpen) setShowClassList(false);
+        if (isOpen) {
+            setShowClassList(false);
+            setShowOriginList(false);
+        }
     }, [isOpen]);
 
     if (!isOpen) return null;
@@ -18,11 +22,22 @@ function ModeSelectModal({isOpen, classes, onSelectGeneral, onSelectMovie, onSel
                     <button className="modal-button" onClick={onSelectGeneral}>General Mode</button>
                     <button
                         className="modal-button"
-                        onClick={() => setShowClassList(true)}
+                        onClick={() => {
+                            setShowClassList(true);
+                            setShowOriginList(false);
+                        }}
                     >
                         Class Mode
                     </button>
-                    <button className="modal-button" onClick={onSelectMovie}>Movie Mode</button>
+                    <button
+                        className="modal-button"
+                        onClick={() => {
+                            setShowOriginList(true);
+                            setShowClassList(false);
+                        }}
+                    >
+                        Origin Mode
+                    </button>
                 </div>
                 {showClassList && (
                     <div className="modal-class-list">
@@ -37,6 +52,23 @@ function ModeSelectModal({isOpen, classes, onSelectGeneral, onSelectMovie, onSel
                         ))}
                     </div>
                 )}
+                {showOriginList && (
+                    <div className="modal-class-list">
+                        {origins.length === 0 ? (
+                            <span className="origin-empty">Loading...</span>
+                        ) : (
+                            origins.map((origin) => (
+                                <button
+                                    key={origin}
+                                    className="modal-chip"
+                                    onClick={() => onSelectOrigin(origin)}
+                                >
+                                    {origin}
+                                </button>
+                            ))
+                        )}
+                    </div>
+                )}
                 <button className="modal-button secondary" onClick={onClose}>Cancel</button>
             </div>
         </div>
@@ -44,4 +76,3 @@ function ModeSelectModal({isOpen, classes, onSelectGeneral, onSelectMovie, onSel
 }
 
 export default ModeSelectModal;
-
