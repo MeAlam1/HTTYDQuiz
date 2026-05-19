@@ -50,12 +50,163 @@
     <meta name="theme-color" content="#0f172a" />
 
     <title>HTTYD Quiz</title>
-  <script type="module" crossorigin src="/assets/index-CHGYTgv2.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BBzEEXx6.css">
+  <script type="module" crossorigin src="/assets/index-s-VLZeao.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BCMYvxf3.css">
 </head>
 
 <body>
-    <div id="root"></div>
+    <div class="app">
+        <header class="app-header">
+            <h1>Dragon Guessing Quiz</h1>
+            <p>Prove your dragon knowledge across classes, origins, and movies.</p>
+        </header>
+        <div class="static-fallback">
+            <div class="top-bar">
+                <div class="info-box">
+                    <label>
+                        <input placeholder="Dragon name..." disabled />
+                    </label>
+                </div>
+                <div class="info-box">
+                    <label>Amount:</label>
+                    <div>0 / 0</div>
+                </div>
+                <div class="info-box">
+                    <label>Timer:</label>
+                    <div>00:00:00</div>
+                </div>
+                <div class="button-group">
+                    <button class="button" disabled>Reset</button>
+                    <button class="button" disabled>Quit</button>
+                </div>
+            </div>
+
+            <div class="dragon-groups-container">
+                <div class="dragon-group">
+                    <h4 class="dragon-group-title">Boulder</h4>
+                    <div class="grid grid-category class-grid">
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                    </div>
+                </div>
+                <div class="dragon-group">
+                    <h4 class="dragon-group-title">Mystery</h4>
+                    <div class="grid grid-category class-grid">
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                    </div>
+                </div>
+                <div class="dragon-group">
+                    <h4 class="dragon-group-title">Sharp</h4>
+                    <div class="grid grid-category class-grid">
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                    </div>
+                </div>
+                <div class="dragon-group">
+                    <h4 class="dragon-group-title">Stoker</h4>
+                    <div class="grid grid-category class-grid">
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                    </div>
+                </div>
+                <div class="dragon-group">
+                    <h4 class="dragon-group-title">Strike</h4>
+                    <div class="grid grid-category class-grid">
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                    </div>
+                </div>
+                <div class="dragon-group">
+                    <h4 class="dragon-group-title">Tidal</h4>
+                    <div class="grid grid-category class-grid">
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                    </div>
+                </div>
+                <div class="dragon-group">
+                    <h4 class="dragon-group-title">Tracker</h4>
+                    <div class="grid grid-category class-grid">
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                    </div>
+                </div>
+                <div class="dragon-group">
+                    <h4 class="dragon-group-title">Unknown</h4>
+                    <div class="grid grid-category class-grid">
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                        <div class="grid-item"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-controls">
+                <div class="timer-area">
+                    <label>Sort:</label>
+                    <button class="control-button" disabled>Class</button>
+                    <button class="control-button" disabled>Origin</button>
+                </div>
+                <div class="timer-area">
+                    <label>Timer:</label>
+                    <div class="timer-buttons">
+                        <button class="control-button" disabled>∞</button>
+                        <div class="time-input">
+                            <label>
+                                <input type="text" value="20" disabled />
+                            </label>
+                            <span>Min</span>
+                        </div>
+                        <button class="control-button" disabled>Set</button>
+                    </div>
+                    <button class="control-button pause-button" disabled>II</button>
+                </div>
+                <div class="timer-area">
+                    <label>Mode:</label>
+                    <span class="mode-pill">General</span>
+                    <button class="control-button" disabled>Change</button>
+                </div>
+                <div class="timer-area">
+                    <label>Filters:</label>
+                    <span class="filter-summary">Origins 0/0</span>
+                    <span class="filter-summary">Classes 0/0</span>
+                    <button class="control-button" disabled>Configure</button>
+                </div>
+            </div>
+        </div>
+        <div id="root"></div>
+    </div>
 </body>
 
 </html>
