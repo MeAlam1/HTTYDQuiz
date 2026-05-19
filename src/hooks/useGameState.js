@@ -43,19 +43,26 @@ export default function useGameState(dragons, filteredClass, activeIndices, sort
             setElapsed(timerMode === "down" ? timeLimit * 60 : 0);
             return;
         }
-        const interval = setInterval(() => {
+
+        let animationFrameId;
+        const update = () => {
             const now = Date.now();
             if (timerMode === "up") {
                 setElapsed(Math.floor((now - startTime) / 1000));
+                animationFrameId = requestAnimationFrame(update);
             } else {
                 const left = timeLimit * 60 - Math.floor((now - startTime) / 1000);
                 setElapsed(left > 0 ? left : 0);
-                if (left <= 0) {
-                    clearInterval(interval);
+                if (left > 0) {
+                    animationFrameId = requestAnimationFrame(update);
+                } else {
+                    timerStarted.current = false;
                 }
             }
-        }, 1000);
-        return () => clearInterval(interval);
+        };
+
+        animationFrameId = requestAnimationFrame(update);
+        return () => cancelAnimationFrame(animationFrameId);
     }, [startTime, timerMode, timeLimit]);
 
     const handleReset = (options = {}) => {

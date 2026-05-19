@@ -1,7 +1,7 @@
 function TopBar({guess, onGuessChange, revealedCount, total, timer, onReset, onQuit}) {
     return (
         <div className="top-bar">
-            <div className="info-box">
+            <div className="info-box guess-box">
                 <input
                     placeholder="Dragon name..."
                     value={guess}
