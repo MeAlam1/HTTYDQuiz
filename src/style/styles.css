@@ -1,19 +1,41 @@
 body {
-    background: #121212;
+    background: radial-gradient(circle at top, #1c2433 0%, #0e1116 55%, #090b0f 100%);
     color: #eee;
-    font-family: sans-serif;
+    font-family: "Segoe UI", system-ui, sans-serif;
     margin: 0;
-    padding: 1rem;
+    padding: 1.5rem;
     display: flex;
     justify-content: center;
+    min-height: 100vh;
 }
 
 .app {
-    max-width: 1000px;
+    max-width: 1100px;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 1rem;
+}
+
+.app-header {
+    text-align: center;
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+    background: rgba(33, 150, 243, 0.08);
+    border: 1px solid rgba(33, 150, 243, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.app-header h1 {
+    margin: 0 0 0.25rem;
+    font-size: 2.2rem;
+    letter-spacing: 0.5px;
+}
+
+.app-header p {
+    margin: 0;
+    color: #b5c2d6;
 }
 
 .top-bar {
@@ -101,6 +123,8 @@ body {
     margin-top: 1rem;
     color: #2196f3;
     text-align: center;
+    font-weight: 600;
+    text-shadow: 0 0 12px rgba(33, 150, 243, 0.4);
 }
 
 .game-controls label {
@@ -332,6 +356,108 @@ body {
     gap: 1rem;
     justify-content: center;
     margin-top: 1rem;
+}
+
+.mode-pill {
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(33, 150, 243, 0.2);
+    color: #cfe8ff;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 6, 12, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 1.5rem;
+}
+
+.modal-card {
+    width: min(560px, 95vw);
+    background: #141a24;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.5rem;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+    text-align: center;
+}
+
+.modal-title {
+    margin: 0 0 0.4rem;
+    font-size: 1.5rem;
+}
+
+.modal-subtitle {
+    margin: 0 0 1rem;
+    color: #9fb1c7;
+}
+
+.modal-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.modal-button {
+    padding: 0.7rem 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(33, 150, 243, 0.4);
+    background: rgba(33, 150, 243, 0.15);
+    color: #d7ecff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.modal-button:hover {
+    transform: translateY(-2px);
+    background: rgba(33, 150, 243, 0.25);
+}
+
+.modal-button.secondary {
+    background: #1b222e;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #c9d3e4;
+}
+
+.modal-class-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.modal-chip {
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #1b222e;
+    color: #dbe6f5;
+    cursor: pointer;
+}
+
+.modal-chip:hover {
+    background: #243146;
+}
+
+.origins-area {
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.origin-empty {
+    color: #9fb1c7;
+    font-style: italic;
 }
 
 @media (max-width: 600px) {

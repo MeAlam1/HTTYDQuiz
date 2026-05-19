@@ -1,7 +1,6 @@
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 
-export default function useGameState(dragons, filteredClass) {
-    const [sortMode, setSortMode] = useState("class");
+export default function useGameState(dragons, filteredClass, activeIndices, sortMode) {
     const [timerMode, setTimerMode] = useState("up");
     const [timeLimit, setTimeLimit] = useState(20);
 
@@ -9,10 +8,13 @@ export default function useGameState(dragons, filteredClass) {
     const [revealed, setRevealed] = useState(Array(dragons.length).fill(false));
     const [startTime, setStartTime] = useState(null);
     const [elapsed, setElapsed] = useState(0);
+    const [hasStarted, setHasStarted] = useState(false);
     const timerStarted = useRef(false);
 
     const [sortedIndices, setSortedIndices] = useState(dragons.map((_, i) => i));
-    const allRevealed = revealed.every(Boolean);
+
+    const activeIndexSet = useMemo(() => new Set(activeIndices), [activeIndices]);
+    const allActiveRevealed = activeIndices.length > 0 && activeIndices.every((index) => revealed[index]);
 
     useEffect(() => {
         let indices = dragons.map((_, i) => i);
@@ -29,19 +31,11 @@ export default function useGameState(dragons, filteredClass) {
     }, [sortMode, dragons]);
 
     useEffect(() => {
-        const filteredIndices = dragons
-            .map((d, i) => (filteredClass ? (d.class === filteredClass ? i : -1) : i))
-            .filter(i => i !== -1);
-
-        const isGameComplete = filteredClass
-            ? filteredIndices.every(index => revealed[index])
-            : allRevealed;
-
-        if (isGameComplete && timerStarted.current) {
+        if (allActiveRevealed && timerStarted.current) {
             setStartTime(null);
             timerStarted.current = false;
         }
-    }, [revealed, dragons, filteredClass, allRevealed]);
+    }, [allActiveRevealed]);
 
     useEffect(() => {
         if (startTime === null) {
@@ -69,12 +63,14 @@ export default function useGameState(dragons, filteredClass) {
         setStartTime(null);
         setElapsed(timerMode === "down" ? timeLimit * 60 : 0);
         setGuess("");
+        setHasStarted(false);
         timerStarted.current = false;
     };
 
     const handleQuit = () => {
         setStartTime(null);
         setGuess("");
+        setHasStarted(false);
         timerStarted.current = false;
     };
 
@@ -85,6 +81,7 @@ export default function useGameState(dragons, filteredClass) {
         if (timerRanOut) {
             handleReset();
             setStartTime(Date.now());
+            setHasStarted(true);
             timerStarted.current = true;
         }
 
@@ -92,6 +89,7 @@ export default function useGameState(dragons, filteredClass) {
             setStartTime(Date.now());
             setElapsed(timerMode === "down" ? timeLimit * 60 : 0);
             setRevealed(Array(dragons.length).fill(false));
+            setHasStarted(true);
             timerStarted.current = true;
         }
 
@@ -99,7 +97,8 @@ export default function useGameState(dragons, filteredClass) {
             .map((dragon, index) => ({dragon, index}))
             .filter(({dragon, index}) => {
                 const isValidClass = !filteredClass || dragon.class === filteredClass;
-                return !revealed[index] && isValidClass &&
+                const isActive = activeIndexSet.has(index);
+                return isActive && !revealed[index] && isValidClass &&
                     dragon.name.toLowerCase() === value.trim().toLowerCase();
             })
             .map(({index}) => index);
@@ -114,17 +113,17 @@ export default function useGameState(dragons, filteredClass) {
         }
     };
 
-    const timerRanOut = timerMode === "down" && elapsed === 0 && timerStarted.current && !allRevealed;
+    const timerRanOut = timerMode === "down" && elapsed === 0 && timerStarted.current && !allActiveRevealed;
 
     return {
-        sortMode, setSortMode,
         timerMode, setTimerMode,
         timeLimit, setTimeLimit,
         guess, setGuess,
         revealed, setRevealed,
         startTime, setStartTime,
         elapsed, setElapsed,
+        hasStarted,
         timerStarted, handleGuessChange, handleReset, handleQuit,
-        allRevealed, timerRanOut, sortedIndices
+        allRevealed: allActiveRevealed, timerRanOut, sortedIndices
     };
 }

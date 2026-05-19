@@ -13,18 +13,13 @@ function GameControls({
                           setSortMode,
                           handleReset,
                           elapsed,
-                          setFilteredClass,
-                          filteredClass,
-                          classes,
-                          enableSchoolOfDragons,
-                          setEnableSchoolOfDragons,
-                          enableRiseOfBerk,
-                          setEnableRiseOfBerk,
-                          enableComic,
-                          setEnableComic
+                          gameMode,
+                          onOpenModeSelect,
+                          originList,
+                          originFilters,
+                          setOriginFilters
                       }) {
     const [isPaused, setIsPaused] = useState(false);
-    const [isClassPopupOpen, setIsClassPopupOpen] = useState(false);
 
     const handleSetTime = () => {
         if (timeLimit > 0) {
@@ -58,10 +53,7 @@ function GameControls({
         setIsPaused(false);
     };
 
-    const handleClassSelect = (selectedClass) => {
-        setFilteredClass(selectedClass);
-        setIsClassPopupOpen(false);
-    };
+    const modeLabel = gameMode === "class" ? "Class" : gameMode === "movie" ? "Movie" : "General";
 
     return (
         <>
@@ -84,7 +76,7 @@ function GameControls({
                         }}
                         className={`control-button ${sortMode === "film" ? "active" : ""}`}
                     >
-                        Film
+                        Origin
                     </button>
                 </div>
                 <div className="timer-area">
@@ -121,76 +113,41 @@ function GameControls({
                 </div>
                 <div className="timer-area">
                     <label>Mode:</label>
+                    <span className="mode-pill">{modeLabel}</span>
                     <button
-                        onClick={() => {
-                            setFilteredClass(null);
-                            handleReset();
-                        }}
-                        className={`control-button ${filteredClass === null ? "active" : ""}`}
+                        onClick={onOpenModeSelect}
+                        className="control-button"
                     >
-                        General
-                    </button>
-                    <button
-                        onClick={() => setIsClassPopupOpen(true)}
-                        className={`control-button ${filteredClass !== null ? "active" : ""}`}
-                    >
-                        Class
+                        Change
                     </button>
                 </div>
             </div>
             <div className="game-controls origins-row">
-                <div className="timer-area">
+                <div className="timer-area origins-area">
                     <label>Origins:</label>
-                    <button
-                        className={`control-button ${enableSchoolOfDragons ? "active" : ""}`}
-                        onClick={() => setEnableSchoolOfDragons(v => !v)}
-                    >
-                        School of Dragons {enableSchoolOfDragons ? "✓" : "✗"}
-                    </button>
-                    <button
-                        className={`control-button ${enableRiseOfBerk ? "active" : ""}`}
-                        onClick={() => setEnableRiseOfBerk(v => !v)}
-                    >
-                        Dragons: Rise of Berk {enableRiseOfBerk ? "✓" : "✗"}
-                    </button>
-                    <button
-                        className={`control-button ${enableComic ? "active" : ""}`}
-                        onClick={() => setEnableComic(v => !v)}
-                    >
-                        Comic {enableComic ? "✓" : "✗"}
-                    </button>
+                    {originList.length === 0 ? (
+                        <span className="origin-empty">Loading...</span>
+                    ) : (
+                        originList.map((origin) => (
+                            <button
+                                key={origin}
+                                className={`control-button ${originFilters[origin] !== false ? "active" : ""}`}
+                                onClick={() =>
+                                    setOriginFilters((prev) => ({
+                                        ...prev,
+                                        [origin]: !(prev[origin] !== false)
+                                    }))
+                                }
+                            >
+                                {origin} {originFilters[origin] !== false ? "✓" : "✗"}
+                            </button>
+                        ))
+                    )}
                 </div>
             </div>
-            {
-                isPaused && <PauseMenu onResume={handleResume}/>
-            }
-            {
-                isClassPopupOpen && (
-                    <div className="pause-menu">
-                        <div className="pause-menu-content">
-                            {classes.map((className) => (
-                                <button
-                                    key={className}
-                                    onClick={() => handleClassSelect(className)}
-                                    className="pause-menu-button"
-                                >
-                                    {className}
-                                </button>
-                            ))}
-                            <button
-                                onClick={() => setIsClassPopupOpen(false)}
-                                className="pause-menu-button cancel-button"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-
-                )
-            }
+            {isPaused && <PauseMenu onResume={handleResume}/>}
         </>
-    )
-        ;
+    );
 }
 
 export default GameControls;

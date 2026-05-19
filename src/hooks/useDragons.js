@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from "react";
 
-export default function useDragons(sortMode) {
+export default function useDragons() {
     const [dragons, setDragons] = useState([]);
 
     useEffect(() => {
@@ -36,23 +36,9 @@ export default function useDragons(sortMode) {
         fetchDragons();
     }, []);
 
-    const sortedDragons = useMemo(() => {
-        if (sortMode === "film") {
-            return dragons.reduce((acc, dragon) => {
-                const existing = acc.find((d) => d.name === dragon.name);
-                if (!existing) {
-                    acc.push(dragon);
-                }
-                return acc;
-            }, []);
-        }
-
-        return dragons;
-    }, [dragons, sortMode]);
-
     const classes = useMemo(() => {
         return [...new Set(dragons.map((d) => d.class))];
     }, [dragons]);
 
-    return {dragons: sortedDragons, classes};
+    return {dragons, classes};
 }

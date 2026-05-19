@@ -1,16 +1,45 @@
 import useDragons from "./hooks/useDragons.js";
 import useGameState from "./hooks/useGameState.js";
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import DragonGrid from "./components/DragonGrid.jsx";
 import Timer from "./components/Timer.jsx";
 import TopBar from "./components/TopBar.jsx";
 import GameControls from "./components/GameControls.jsx";
+import ModeSelectModal from "./components/ModeSelectModal.jsx";
 
 function App() {
     const [filteredClass, setFilteredClass] = useState(null);
     const [sortMode, setSortMode] = useState("class");
-    const {dragons, classes} = useDragons(sortMode);
+    const [gameMode, setGameMode] = useState("general");
+    const [isModeModalOpen, setIsModeModalOpen] = useState(true);
+    const {dragons, classes} = useDragons();
     const [loading, setLoading] = useState(true);
+
+    const originList = useMemo(() => {
+        return [...new Set(dragons.map((d) => d.film))].sort((a, b) => a.localeCompare(b));
+    }, [dragons]);
+    const [originFilters, setOriginFilters] = useState({});
+
+    useEffect(() => {
+        if (originList.length === 0) return;
+        setOriginFilters((prev) => {
+            const next = {...prev};
+            originList.forEach((origin) => {
+                if (next[origin] === undefined) next[origin] = true;
+            });
+            return next;
+        });
+    }, [originList]);
+
+    const isDragonActive = (dragon) => {
+        const originEnabled = originFilters[dragon.film] !== false;
+        const classEnabled = !filteredClass || dragon.class === filteredClass;
+        return originEnabled && classEnabled;
+    };
+
+    const activeIndices = dragons
+        .map((dragon, index) => (isDragonActive(dragon) ? index : -1))
+        .filter((index) => index !== -1);
 
     const {
         timerMode, setTimerMode,
@@ -18,40 +47,22 @@ function App() {
         guess,
         revealed, setRevealed,
         elapsed, setElapsed, setStartTime, handleGuessChange, handleReset, handleQuit,
-        allRevealed, timerRanOut, sortedIndices
-    } = useGameState(dragons, filteredClass);
+        hasStarted, allRevealed, timerRanOut, sortedIndices
+    } = useGameState(dragons, filteredClass, activeIndices, sortMode);
 
-    const [enableSchoolOfDragons, setEnableSchoolOfDragons] = useState(true);
-    const [enableRiseOfBerk, setEnableRiseOfBerk] = useState(true);
-    const [enableComic, setEnableComic] = useState(true);
-
-    const filteredDragons = (filteredClass
-            ? dragons.filter((d) => d.class === filteredClass)
-            : dragons
-    ).filter(d =>
-        (enableSchoolOfDragons || d.film !== "School of Dragons") &&
-        (enableRiseOfBerk || d.film !== "Dragons: Rise of Berk") &&
-        (enableComic || d.film !== "Comic")
-    );
+    const filteredDragons = dragons.filter(isDragonActive);
 
     const uniqueFilteredDragons = Array.from(
         new Map(filteredDragons.map((d) => [d.name, d])).values()
     );
 
-    const filteredIndices = dragons
-        .map((d, i) => (filteredDragons.includes(d) ? i : -1))
-        .filter((i) => i !== -1);
-
-    const filteredSortedIndices = sortedIndices.filter((i) => filteredIndices.includes(i));
+    const activeIndexSet = useMemo(() => new Set(activeIndices), [activeIndices]);
+    const filteredSortedIndices = sortedIndices.filter((i) => activeIndexSet.has(i));
     const filteredRevealed = filteredSortedIndices.map((i) => revealed[i]);
 
     const revealedCount = new Set(
         filteredSortedIndices.filter((i) => revealed[i]).map((i) => dragons[i].name)
     ).size;
-
-    const filteredAllRevealed = filteredClass
-        ? filteredIndices.every(index => revealed[index])
-        : allRevealed;
 
     const sortedDragonsList = filteredSortedIndices.map((i) => dragons[i]);
 
@@ -63,27 +74,53 @@ function App() {
         window.completeGame = () => {
             console.log("Revealing all visible dragons...");
 
-            if (filteredClass) {
-                const newRevealed = [...revealed];
-                dragons.forEach((dragon, index) => {
-                    if (dragon.class === filteredClass) {
-                        newRevealed[index] = true;
-                    }
-                });
-                setRevealed(newRevealed);
-            } else {
-                setRevealed(Array(dragons.length).fill(true));
-            }
-            o
+            if (activeIndices.length === 0) return;
+            const newRevealed = [...revealed];
+            activeIndices.forEach((index) => {
+                newRevealed[index] = true;
+            });
+            setRevealed(newRevealed);
         };
 
         return () => {
             delete window.completeGame;
         };
-    }, [dragons, revealed, filteredClass, setRevealed]);
+    }, [activeIndices, revealed, setRevealed]);
+
+    const applyGeneralMode = () => {
+        setGameMode("general");
+        setFilteredClass(null);
+        setSortMode("class");
+        handleReset();
+        setIsModeModalOpen(false);
+    };
+
+    const applyClassMode = (className) => {
+        setGameMode("class");
+        setFilteredClass(className);
+        setSortMode("class");
+        handleReset();
+        setIsModeModalOpen(false);
+    };
+
+    const applyMovieMode = () => {
+        setGameMode("movie");
+        setFilteredClass(null);
+        setSortMode("film");
+        handleReset();
+        setIsModeModalOpen(false);
+    };
+
+    const handleModeModalClose = () => {
+        setIsModeModalOpen(false);
+    };
 
     return (
         <div className="app">
+            <header className="app-header">
+                <h1>Dragon Guessing Quiz</h1>
+                <p>Prove your dragon knowledge across classes, origins, and movies.</p>
+            </header>
             <TopBar
                 guess={guess}
                 onGuessChange={handleGuessChange}
@@ -100,11 +137,11 @@ function App() {
                 <DragonGrid dragons={sortedDragonsList} revealed={filteredRevealed} sortMode={sortMode}/>
             )}
 
-            {(filteredAllRevealed || timerRanOut) && (
+            {hasStarted && (allRevealed || timerRanOut) && (
                 <h2 className="complete-text">
-                    {filteredAllRevealed
+                    {allRevealed
                         ? `🎉 All done in ${Timer.formatTime(timerMode === "down" ? timeLimit * 60 - elapsed : elapsed)}!`
-                        : `⏰ Time's up! You were almost there with ${filteredRevealed.filter(Boolean).length}/${filteredDragons.length} dragons!`}
+                        : `⏰ Time's up! You were almost there with ${revealedCount}/${uniqueFilteredDragons.length} dragons!`}
                 </h2>
             )}
 
@@ -131,17 +168,22 @@ function App() {
                     timerStarted={timerStarted}
                     handleReset={handleReset}
                     elapsed={elapsed}
-                    setFilteredClass={setFilteredClass}
-                    filteredClass={filteredClass}
-                    classes={classes}
-                    enableSchoolOfDragons={enableSchoolOfDragons}
-                    setEnableSchoolOfDragons={setEnableSchoolOfDragons}
-                    enableRiseOfBerk={enableRiseOfBerk}
-                    setEnableRiseOfBerk={setEnableRiseOfBerk}
-                    enableComic={enableComic}
-                    setEnableComic={setEnableComic}
+                    gameMode={gameMode}
+                    onOpenModeSelect={() => setIsModeModalOpen(true)}
+                    originList={originList}
+                    originFilters={originFilters}
+                    setOriginFilters={setOriginFilters}
                 />
             </div>
+
+            <ModeSelectModal
+                isOpen={isModeModalOpen}
+                classes={classes}
+                onSelectGeneral={applyGeneralMode}
+                onSelectMovie={applyMovieMode}
+                onSelectClass={applyClassMode}
+                onClose={handleModeModalClose}
+            />
         </div>
     );
 }
