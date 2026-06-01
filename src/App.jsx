@@ -282,6 +282,12 @@ function App() {
                 onConfirm={handleConfirmReset}
                 onCancel={handleCancelReset}
             />
+
+            <footer style={{ marginTop: 'auto', padding: '2rem 1rem 1rem', textAlign: 'center', fontSize: '0.85rem' }}>
+                <a href="/about.html" style={{ color: '#cbd5e1', margin: '0 10px', textDecoration: 'none' }} onMouseOver={e => e.target.style.textDecoration = 'underline'} onMouseOut={e => e.target.style.textDecoration = 'none'}>About</a>
+                <a href="/privacy.html" style={{ color: '#cbd5e1', margin: '0 10px', textDecoration: 'none' }} onMouseOver={e => e.target.style.textDecoration = 'underline'} onMouseOut={e => e.target.style.textDecoration = 'none'}>Privacy Policy</a>
+                <a href="/terms.html" style={{ color: '#cbd5e1', margin: '0 10px', textDecoration: 'none' }} onMouseOver={e => e.target.style.textDecoration = 'underline'} onMouseOut={e => e.target.style.textDecoration = 'none'}>Terms of Service</a>
+            </footer>
         </>
     );
 }
